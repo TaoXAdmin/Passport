@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Passport</title>
+        <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background-color: #f5f5f7; color: #1d1d1f;  height: 100vh; margin: 0 2rem; text-align: center; }
+        .container { animation: fadeIn 2s ease-in-out; width: 100%; max-width: 500px; }
+        .title { font-size: 3rem; font-weight: 600; margin-bottom: 1rem; }
+        .subtitle { font-size: 1.3rem; color: #6e6e73; margin-bottom: 2.5rem; }
+        .links { display: flex; flex-direction: column; gap: 1.5rem; }
+        .link { font-size: 1.2rem; font-weight: 500; color: #007aff; text-decoration: none; padding: 0.8rem 2rem; border: 2px solid #007aff; border-radius: 12px; transition: all 0.3s ease; touch-action: manipulation; }
+        .link:hover { background-color: #007aff; color: #ffffff; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+  <h1>Real-Time Microphone Listening</h1> <br>
+  <p id="result-text">Captured text will be displayed here...</p> <br>
+  <p id="selected-country">Selected Country: </p> <br>
+    <script>
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let recognition;
+        let isListening = false;
+
+        // Correspondance entre les cartes et les pays
+const cardToCountry = {
+    "ace of spades": "flag of Brazil",
+    "2 of spades": "flag of China",
+    "3 of spades": "flag of Israel",
+    "4 of spades": "flag of South Korea",
+    "5 of spades": "flag of Germany",
+    "6 of spades": "flag of Georgia",
+    "7 of spades": "flag of Russia",
+    "8 of spades": "flag of Italy",
+    "9 of spades": "flag of Canada",
+    "10 of spades": "flag of Poland",
+    "jack of spades": "flag of Thailand",
+    "queen of spades": "flag of Ukraine",
+    "king of spades": "flag of Panama",
+    "ace of hearts": "flag of Uruguay",
+    "2 of hearts": "flag of Argentina",
+    "3 of hearts": "flag of Mauritius",
+    "4 of hearts": "flag of the Bahamas",
+    "5 of hearts": "flag of Cameroon",
+    "6 of hearts": "flag of Jamaica",
+    "7 of hearts": "flag of Spain",
+    "8 of hearts": "flag of France",
+    "9 of hearts": "flag of Greece",
+    "10 of hearts": "flag of Seychelles",
+    "jack of hearts": "flag of Ireland",
+    "queen of hearts": "flag of Colombia",
+    "king of hearts": "flag of Portugal",
+    "ace of clubs": "flag of Switzerland",
+    "2 of clubs": "flag of Morocco",
+    "3 of clubs": "flag of Austria",
+    "4 of clubs": "flag of Algeria",
+    "5 of clubs": "flag of Norway",
+    "6 of clubs": "flag of the USA",
+    "7 of clubs": "flag of Turkey",
+    "8 of clubs": "flag of the Philippines",
+    "9 of clubs": "flag of Tanzania",
+    "10 of clubs": "flag of Japan",
+    "jack of clubs": "flag of Romania",
+    "queen of clubs": "flag of Finland",
+    "king of clubs": "flag of Guyana",
+    "ace of diamonds": "flag of South Africa",
+    "2 of diamonds": "flag of India",
+    "3 of diamonds": "flag of Denmark",
+    "4 of diamonds": "flag of Sweden",
+    "5 of diamonds": "flag of Laos",
+    "6 of diamonds": "flag of Belgium",
+    "7 of diamonds": "flag of Australia",
+    "8 of diamonds": "flag of the Netherlands",
+    "9 of diamonds": "flag of Vietnam",
+    "10 of diamonds": "flag of the United Kingdom",
+    "jack of diamonds": "flag of Peru",
+    "queen of diamonds": "flag of Tunisia",
+    "king of diamonds": "flag of Macedonia"
+};
+
+        function startRecognition() {
+            if (!isListening) {
+                recognition.start();
+                isListening = true;
+                console.log('Reconnaissance vocale commencée.');
+            }
+        }
+
+        function stopRecognition() {
+            if (isListening) {
+                recognition.stop();
+                isListening = false;
+                console.log('Reconnaissance vocale arrêtée.');
+            }
+        }
+
+        function analyzeTranscript(transcript) {
+            // Parcourir toutes les cartes possibles pour trouver une correspondance
+            for (let card in cardToCountry) {
+                if (transcript.includes(card)) {
+                    const country = cardToCountry[card];
+                    document.getElementById('selected-country').textContent = `Selected Country : ${country}`;
+
+                    // Rediriger vers Google Images avec le pays sélectionné
+                    const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(country)}&hl=fr&tbm=isch`;
+                    window.location.href = googleSearchUrl;
+                    break;
+                }
+            }
+        }
+
+        if (SpeechRecognition) {
+            recognition = new SpeechRecognition();
+            recognition.lang = 'en-US';
+            recognition.continuous = true;
+            recognition.interimResults = true;
+
+            const resultText = document.getElementById('result-text');
+
+            recognition.onresult = (event) => {
+                let transcript = '';
+                for (let i = 0; i < event.results.length; i++) {
+                    transcript += event.results[i][0].transcript;
+                }
+                resultText.textContent = transcript;
+
+                analyzeTranscript(transcript.toLowerCase());
+            };
+
+            recognition.onerror = (event) => {
+                console.error('Erreur de reconnaissance vocale :', event.error);
+                stopRecognition();
+                startRecognition();
+            };
+
+            recognition.onend = () => {
+                console.log('Reconnaissance vocale terminée.');
+                isListening = false;
+                startRecognition();
+            };
+
+            document.addEventListener('DOMContentLoaded', () => {
+                startRecognition();
+            });
+
+            window.addEventListener('focus', () => {
+                if (!isListening) {
+                    startRecognition();
+                }
+            });
+
+        } else {
+            alert("Votre navigateur ne supporte pas la reconnaissance vocale.");
+        }
+    </script>
+</body>
+</html>
